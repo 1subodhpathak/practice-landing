@@ -11,11 +11,29 @@ import Preloader from './components/Preloader';
 import logo from './assets/images/logo.png';
 import pythonLogo from './assets/images/python.png';
 import sqlLogo from './assets/images/sql.png';
+import FuturisticGlitchPopup from './components/FuturisticGlitchPopup';
+import { useLocation } from 'react-router-dom';
+import buttonClickSound from './assets/mp3/button-click.mp3';
 // import CircuitOverlay from './components/CircuitOverlay';
 
 function App() {
   const [triggerGlitch, setTriggerGlitch] = React.useState(false);
   const [preloaderDone, setPreloaderDone] = React.useState(false);
+  const [popupOpen, setPopupOpen] = React.useState(false);
+  const [popupBadge, setPopupBadge] = React.useState(null); // 'Python' | 'SQL' | null
+  const location = useLocation();
+  const buttonClickRef = React.useRef(null);
+
+  // Building definitions (move from CyberpunkBackground)
+  const buildings = [
+    { x: 0, width: 80, height: 300, type: 'tower' },
+    { x: 90, width: 60, height: 250, type: 'spire' },
+    { x: 170, width: 100, height: 350, type: 'complex' },
+    { x: window.innerWidth - 250, width: 90, height: 320, type: 'tower' },
+    { x: window.innerWidth - 150, width: 70, height: 280, type: 'spire' },
+    { x: window.innerWidth - 80, width: 80, height: 300, type: 'complex' },
+  ];
+  const [hoveredBuilding, setHoveredBuilding] = React.useState(null);
 
   React.useEffect(() => {
     // Trigger glitch effect on page load
@@ -26,14 +44,25 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  const handleTechOrbClick = (badge) => {
+    if (buttonClickRef.current) {
+      buttonClickRef.current.currentTime = 0;
+      buttonClickRef.current.play();
+    }
+    setTimeout(() => {
+      setPopupBadge(badge);
+      setPopupOpen(true);
+    }, 80); // slight delay for sound
+  };
+
   return (
     <>
-      {!preloaderDone && <Preloader onFinish={() => setPreloaderDone(true)} />}
-      {preloaderDone && (
+      {location.pathname === '/' && !preloaderDone && <Preloader onFinish={() => setPreloaderDone(true)} />}
+      {(location.pathname !== '/' || preloaderDone) && (
         <SoundManager>
           <div className="min-h-screen overflow-hidden relative">
             {/* Cyberpunk Background */}
-            <CyberpunkBackground />
+            <CyberpunkBackground buildings={buildings} hoveredBuilding={hoveredBuilding} />
             <ParticleField />
             <div className="hack-scanlines hack-flicker"></div>
             {/* <CircuitOverlay /> */}
@@ -89,19 +118,22 @@ function App() {
 
             {/* Technology Orbs - Only Python and SQL */}
             <div className="relative z-10">
+              <audio ref={buttonClickRef} src={buttonClickSound} preload="auto" />
               <TechOrb 
                 name="Python" 
-                icon=<img src={pythonLogo} alt="Python" style={{ height: 64, width: 64 }}/>
+                icon={<img src={pythonLogo} alt="Python" style={{ height: 64, width: 64 }}/>} 
                 color="#4dd0e1" 
-                position={{ x: 25, y: 75 }} 
+                position={{ x: 25, y: 70 }} 
                 size="large"
+                onClick={() => handleTechOrbClick('Python')}
               />
               <TechOrb 
                 name="SQL" 
-                icon=<img src={sqlLogo} alt="SQL" style={{ height: 64, width: 64 }}/>
+                icon={<img src={sqlLogo} alt="SQL" style={{ height: 64, width: 64 }}/>} 
                 color="#00d4aa" 
                 position={{ x: 75, y: 70 }} 
                 size="large"
+                onClick={() => handleTechOrbClick('SQL')}
               />
             </div>
 
@@ -170,6 +202,25 @@ function App() {
               <div className="absolute bottom-0 left-1/2 w-2 h-full bg-gradient-to-t from-cyan-400/30 to-transparent blur-sm"></div>
             </div>
 
+            {/* Overlay interactive divs for each building */}
+            {buildings.map((b, i) => (
+              <div
+                key={i}
+                style={{
+                  position: 'fixed',
+                  left: b.x,
+                  top: `calc(100vh - ${b.height}px)` ,
+                  width: b.width,
+                  height: b.height,
+                  zIndex: 10,
+                  background: 'transparent',
+                  pointerEvents: 'auto',
+                }}
+                onMouseEnter={() => setHoveredBuilding(i)}
+                onMouseLeave={() => setHoveredBuilding(null)}
+              />
+            ))}
+
             {/* Custom Styles */}
             <style jsx global>{`
               @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -193,6 +244,11 @@ function App() {
                 display: none;
               }
             `}</style>
+            <FuturisticGlitchPopup 
+              open={popupOpen} 
+              onClose={() => setPopupOpen(false)} 
+              badgeType={popupBadge} 
+            />
           </div>
         </SoundManager>
       )}

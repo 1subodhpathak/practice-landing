@@ -7,13 +7,15 @@ import React from 'react';
  * @param {string} props.color
  * @param {{x: number, y: number}} props.position
  * @param {'small'|'medium'|'large'} [props.size]
+ * @param {function} [props.onClick]
  */
 const TechOrb = ({ 
   name, 
   icon, 
   color, 
   position, 
-  size = 'medium' 
+  size = 'medium',
+  onClick
 }) => {
   const getSizeClasses = () => {
     switch (size) {
@@ -37,6 +39,7 @@ const TechOrb = ({
         top: `${position.y}%`,
         animation: 'float 6s ease-in-out infinite'
       }}
+      onClick={onClick}
     >
       {/* Outer glow ring */}
       <div className={`${getSizeClasses()} rounded-full absolute animate-pulse`}>

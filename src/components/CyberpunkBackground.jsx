@@ -10,9 +10,10 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-const CyberpunkBackground = () => {
+const CyberpunkBackground = ({ buildings, hoveredBuilding }) => {
   const canvasRef = useRef(null);
-  const [hoveredBuilding, setHoveredBuilding] = useState(null);
+  // Store window colors for hovered building
+  const [windowColors, setWindowColors] = useState({});
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -35,16 +36,6 @@ const CyberpunkBackground = () => {
     // Grid light rays state
     const gridLightRays = [];
 
-    // Building definitions
-    const buildings = [
-      { x: 0, width: 80, height: 300, type: 'tower' },
-      { x: 90, width: 60, height: 250, type: 'spire' },
-      { x: 170, width: 100, height: 350, type: 'complex' },
-      { x: canvas.width - 250, width: 90, height: 320, type: 'tower' },
-      { x: canvas.width - 150, width: 70, height: 280, type: 'spire' },
-      { x: canvas.width - 80, width: 80, height: 300, type: 'complex' },
-    ];
-
     // Mouse interaction
     const handleMouseMove = (event) => {
       const rect = canvas.getBoundingClientRect();
@@ -60,7 +51,7 @@ const CyberpunkBackground = () => {
         }
       });
 
-      setHoveredBuilding(foundBuilding);
+      // setHoveredBuilding(foundBuilding);
     };
 
     canvas.addEventListener('mousemove', handleMouseMove);
@@ -235,6 +226,23 @@ const CyberpunkBackground = () => {
         const windowRows = Math.floor(building.height / 25);
         const windowCols = Math.floor(building.width / 15);
         
+        // Generate random window colors on hover
+        let colors = [];
+        if (isHovered) {
+          if (!windowColors[buildingIndex] || windowColors[buildingIndex].length !== windowRows * windowCols) {
+            // Generate new colors for this building
+            const colorChoices = [
+              'rgba(0, 212, 170, 0.85)', // cyan/green
+              'rgba(180, 0, 255, 0.85)', // purple
+              'rgba(0, 255, 90, 0.85)'   // bright green
+            ];
+            colors = Array.from({ length: windowRows * windowCols }, () => colorChoices[Math.floor(Math.random() * colorChoices.length)]);
+            setWindowColors(prev => ({ ...prev, [buildingIndex]: colors }));
+          } else {
+            colors = windowColors[buildingIndex];
+          }
+        }
+        let colorIdx = 0;
         for (let row = 0; row < windowRows; row++) {
           for (let col = 0; col < windowCols; col++) {
             const shouldHaveWindow = (row + col) % 3 === 0 || (row % 2 === 0 && col % 2 === 1);
@@ -245,16 +253,24 @@ const CyberpunkBackground = () => {
               const windowWidth = 8;
               const windowHeight = 18;
               
-              // Enhanced window glow on hover
-              const windowOpacity = isHovered ? 0.7 : 0.4;
-              ctx.fillStyle = `rgba(0, 212, 170, ${windowOpacity})`;
+              let windowColor = isHovered && colors.length ? colors[colorIdx] : `rgba(0, 212, 170, ${isHovered ? 0.7 : 0.4})`;
+              ctx.fillStyle = windowColor;
               ctx.fillRect(windowX, windowY, windowWidth, windowHeight);
               
-              ctx.strokeStyle = `rgba(77, 208, 225, ${windowOpacity + 0.2})`;
+              ctx.strokeStyle = isHovered && colors.length ? windowColor : `rgba(77, 208, 225, ${isHovered ? 0.9 : 0.6})`;
               ctx.lineWidth = 0.5;
               ctx.strokeRect(windowX, windowY, windowWidth, windowHeight);
+              colorIdx++;
             }
           }
+        }
+        // Clear window colors when not hovered
+        if (!isHovered && windowColors[buildingIndex]) {
+          setWindowColors(prev => {
+            const copy = { ...prev };
+            delete copy[buildingIndex];
+            return copy;
+          });
         }
 
         // Hover effects
@@ -377,6 +393,105 @@ const CyberpunkBackground = () => {
       }
     };
 
+    const drawHUDOverlays = () => {
+      // Rotating rings and arcs
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height * 0.45;
+      const ringCount = 3;
+      for (let i = 0; i < ringCount; i++) {
+        const radius = 180 + i * 38 + Math.sin(time * 0.001 + i) * 8;
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(((time * 0.0002) + i * 0.7) % (2 * Math.PI));
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, Math.PI * 0.12, Math.PI * 1.88);
+        ctx.strokeStyle = `rgba(0, 212, 170, ${0.13 + 0.07 * i})`;
+        ctx.lineWidth = 2 + i;
+        ctx.shadowColor = 'rgba(77, 208, 225, 0.3)';
+        ctx.shadowBlur = 8 + i * 2;
+        ctx.stroke();
+        ctx.restore();
+      }
+      // Pulsing central circle
+      ctx.save();
+      ctx.globalAlpha = 0.18 + 0.08 * Math.sin(time * 0.002);
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 60 + Math.sin(time * 0.002) * 8, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(0, 212, 170, 0.18)';
+      ctx.shadowColor = 'rgba(77, 208, 225, 0.25)';
+      ctx.shadowBlur = 18;
+      ctx.fill();
+      ctx.restore();
+      // Rotating arc segments
+      for (let i = 0; i < 4; i++) {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(((time * 0.0005) + i * Math.PI / 2) % (2 * Math.PI));
+        ctx.beginPath();
+        ctx.arc(0, 0, 120, Math.PI * 0.05, Math.PI * 0.22);
+        ctx.strokeStyle = 'rgba(0, 212, 170, 0.22)';
+        ctx.lineWidth = 4;
+        ctx.shadowColor = 'rgba(77, 208, 225, 0.18)';
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+        ctx.restore();
+      }
+    };
+
+    // Data streams/circuit traces
+    const dataStreams = [
+      // Example: from left building to right building
+      { x1: 80, y1: canvas.height - 300, x2: canvas.width - 80, y2: canvas.height - 300, phase: 0 },
+      // Example: from center to bottom
+      { x1: canvas.width / 2, y1: canvas.height * 0.45, x2: canvas.width / 2, y2: canvas.height - 50, phase: Math.PI },
+      // Example: diagonal
+      { x1: 170, y1: canvas.height - 350, x2: canvas.width - 150, y2: canvas.height - 280, phase: Math.PI / 2 },
+    ];
+    const drawDataStreams = () => {
+      dataStreams.forEach((stream, idx) => {
+        // Glowing line
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(stream.x1, stream.y1);
+        ctx.lineTo(stream.x2, stream.y2);
+        ctx.strokeStyle = 'rgba(0, 212, 170, 0.18)';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = 'rgba(77, 208, 225, 0.18)';
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+        ctx.restore();
+        // Moving data packet
+        const t = ((time * 0.0004 + idx * 0.33) % 1);
+        const px = stream.x1 + (stream.x2 - stream.x1) * t;
+        const py = stream.y1 + (stream.y2 - stream.y1) * t;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(px, py, 7, 0, 2 * Math.PI);
+        ctx.fillStyle = 'rgba(0, 212, 170, 0.7)';
+        ctx.shadowColor = 'rgba(77, 208, 225, 0.7)';
+        ctx.shadowBlur = 16;
+        ctx.fill();
+        ctx.restore();
+      });
+    };
+
+    // Scan line effect
+    const drawScanLine = () => {
+      const scanDuration = 4200; // ms
+      const scanProgress = ((time % scanDuration) / scanDuration);
+      const scanY = canvas.height * scanProgress;
+      ctx.save();
+      const grad = ctx.createLinearGradient(0, scanY - 12, 0, scanY + 12);
+      grad.addColorStop(0, 'rgba(0, 212, 170, 0)');
+      grad.addColorStop(0.45, 'rgba(0, 212, 170, 0.13)');
+      grad.addColorStop(0.5, 'rgba(0, 212, 170, 0.32)');
+      grad.addColorStop(0.55, 'rgba(0, 212, 170, 0.13)');
+      grad.addColorStop(1, 'rgba(0, 212, 170, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, scanY - 12, canvas.width, 24);
+      ctx.restore();
+    };
+
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
@@ -394,6 +509,9 @@ const CyberpunkBackground = () => {
       drawBuildings();
       drawGrid();
       drawFloatingElements();
+      drawHUDOverlays();
+      drawDataStreams();
+      drawScanLine();
       
       time += 16; // Approximately 60fps timing
       animationFrame = requestAnimationFrame(animate);
@@ -406,7 +524,7 @@ const CyberpunkBackground = () => {
       canvas.removeEventListener('mousemove', handleMouseMove);
       cancelAnimationFrame(animationFrame);
     };
-  }, [hoveredBuilding]);
+  }, [buildings, hoveredBuilding]);
 
   return (
     <canvas
