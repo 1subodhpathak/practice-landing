@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+.hack-scanlines {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0,255,180,0.04) 0px,
+    rgba(0,255,180,0.04) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  mix-blend-mode: lighten;
+  animation: scan-move 2s linear infinite;
+}
+@keyframes scan-move {
+  0% { background-position-y: 0; }
+  100% { background-position-y: 4px; }
+}
+.hack-flicker {
+  animation: crt-flicker 1.5s infinite steps(2, end);
+}
+@keyframes crt-flicker {
+  0%, 100% { opacity: 1; }
+  48% { opacity: 0.95; }
+  50% { opacity: 0.85; }
+  52% { opacity: 0.98; }
+}

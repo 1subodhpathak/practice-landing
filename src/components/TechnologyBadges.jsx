@@ -1,10 +1,12 @@
 import React from 'react';
+import pythonLogo from '../assets/images/python.png';
+import sqlLogo from '../assets/images/sql.png';
 
 const technologies = [
   { name: 'Excel', color: 'from-green-600 to-green-800', icon: '📊' },
-  { name: 'Python', color: 'from-blue-600 to-blue-800', icon: '🐍' },
+  { name: 'Python', color: 'from-blue-600 to-blue-800', icon: <img src={pythonLogo} alt="Python" style={{ height: 28, width: 28 }} /> },
   { name: 'PowerBI', color: 'from-yellow-600 to-yellow-800', icon: '📈' },
-  { name: 'SQL', color: 'from-orange-600 to-orange-800', icon: '🗃️' },
+  { name: 'SQL', color: 'from-orange-600 to-orange-800', icon: <img src={sqlLogo} alt="SQL" style={{ height: 28, width: 28 }} /> },
   { name: 'Tableau', color: 'from-purple-600 to-purple-800', icon: '📋' },
 ];
 

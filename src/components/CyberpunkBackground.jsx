@@ -37,9 +37,9 @@ const CyberpunkBackground = () => {
 
     // Building definitions
     const buildings = [
-      { x: 50, width: 80, height: 300, type: 'tower' },
-      { x: 150, width: 60, height: 250, type: 'spire' },
-      { x: 230, width: 100, height: 350, type: 'complex' },
+      { x: 0, width: 80, height: 300, type: 'tower' },
+      { x: 90, width: 60, height: 250, type: 'spire' },
+      { x: 170, width: 100, height: 350, type: 'complex' },
       { x: canvas.width - 250, width: 90, height: 320, type: 'tower' },
       { x: canvas.width - 150, width: 70, height: 280, type: 'spire' },
       { x: canvas.width - 80, width: 80, height: 300, type: 'complex' },
