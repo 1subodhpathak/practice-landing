@@ -1,5 +1,6 @@
 import React from 'react';
 import { DivideIcon as LucideIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * @param {Object} props
@@ -16,6 +17,8 @@ const FuturisticButton = ({
   onClick,
   className = ''
 }) => {
+  const navigate = useNavigate();
+
   const getVariantStyles = () => {
     switch (variant) {
       case 'primary':
@@ -29,9 +32,16 @@ const FuturisticButton = ({
     }
   };
 
+  const handleClick = () => {
+    // Play sound (handled by SoundManager)
+    setTimeout(() => {
+      onClick && onClick();
+    }, 1300); // 1300ms delay for sound to play
+  };
+
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className={
         `group relative overflow-hidden backdrop-blur-xl
         ${variant === 'dashboard' ? 'rounded-full' : 'rounded-lg px-8 py-3'}
@@ -51,9 +61,11 @@ const FuturisticButton = ({
       />
       
       {/* Content */}
-      <div className={`relative flex items-center ${variant === 'dashboard' ? 'justify-center' : 'gap-2'}`}>
+      <div className={`relative flex items-center justify-center w-full h-full ${Icon && variant !== 'dashboard' ? 'gap-2' : ''}`}>
         {Icon && <Icon className={`${variant === 'dashboard' ? 'w-8 h-8' : 'w-5 h-5'} group-hover:animate-pulse`} />}
-        {variant !== 'dashboard' && children}
+        {variant !== 'dashboard' && (
+          <span className="w-full text-center flex items-center justify-center">{children}</span>
+        )}
       </div>
       
       {/* Glow effect */}
